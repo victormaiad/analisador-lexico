@@ -1,36 +1,78 @@
-function scanner(programa) {
-  // separa o programa em tokens (unidades léxicas)
-  var tokens = programa.match(/while|do|[ij]|[0-9]+|[<+=;]/g);
+const PALAVRA_CHAVE = ['while', 'do'];
+const OPERADOR = ['<', '=', '+'];
+const TERMINADOR = ';';
+const IDENTIFICADOR = ['i', 'j'];
 
-  // itera sobre cada token e classifica seu tipo
-  for (var i = 0; i < tokens.length; i++) {
-    var token = tokens[i];
-
-    // verifica se é uma palavra reservada
-    if (token === "while" || token === "do") {
-      console.log("Palavra reservada: " + token);
+function lex(code) {
+  const tokens = [];
+  let pos = 0;
+  let line = 0;
+  let col = 0;
+  
+  while (pos < code.length) {
+    let char = code[pos];
+    
+    if (/\s/.test(char)) {
+      pos++;
+      col++;
     }
-    // verifica se é um operador
-    else if (token === "<" || token === "=" || token === "+") {
-      console.log("Operador: " + token);
+    else if (char === TERMINADOR) {
+      tokens.push({ token: char, id: 'Terminador', tamanho: 1, line, col });
+      pos++;
+      col++;
     }
-    // verifica se é um terminador
-    else if (token === ";") {
-      console.log("Terminador: " + token);
+    else if (/\d/.test(char)) {
+      let tamanho = 1;
+      let value = '';
+      while (/\d/.test(code[pos + tamanho])) {
+        value += code[pos + tamanho];
+        tamanho++;
+      }
+      tokens.push({ token: char + value, id: 'Constante', tamanho, line, col });
+      pos += tamanho;
+      col += tamanho;
     }
-    // verifica se é um identificador
-    else if (token === "i" || token === "j") {
-      console.log("Identificador: " + token);
+    else if (/[a-zA-Z]/.test(char)) {
+      let tamanho = 1;
+      let value = '';
+      while (/[a-zA-Z]/.test(code[pos + tamanho])) {
+        value += code[pos + tamanho];
+        tamanho++;
+      }
+      if (PALAVRA_CHAVE.includes(char + value)) {
+        tokens.push({ token: char + value, id: 'Palavra-Chave', tamanho, line, col });
+      }
+      else if (IDENTIFICADOR.includes(char)) {
+        tokens.push({ token: char, id: 'Identificador', tamanho: 1, line, col });
+      }
+      else {
+        throw new Error(`Invalid identifier '${char + value}' at line ${line}, column ${col}`);
+      }
+      pos += tamanho;
+      col += tamanho;
     }
-    // verifica se é uma constante
-    else if (/^[0-9]+$/.test(token)) {
-      console.log("Constante: " + token);
+    else if (OPERADOR.includes(char)) {
+      tokens.push({ token: char, id: 'Operador', tamanho: 1, line, col });
+      pos++;
+      col++;
     }
-    // se não for nenhum dos tipos acima, é um token inválido
     else {
-      console.log("Token inválido: " + token);
+      throw new Error(`Invalid character '${char}' at line ${line}, column ${col}`);
+    }
+    
+    if (char === '\n') {
+      line++;
+      col = 1;
     }
   }
+  
+  return tokens;
 }
 
-scanner("while i < 100 do i = i + j;");
+
+const code  = 'while i < 100 do i = i + j;';
+
+const tokens = lex(code);
+
+console.table(tokens);
+
