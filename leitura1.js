@@ -1,4 +1,4 @@
-const input = 'whil i < 100 do i = i + j;';
+const input = 'while i < 100 do i = i + j;';
 
 const keywords = ['while', 'do'];
 const operators = ['<', '=', '+'];
@@ -86,3 +86,53 @@ const tokens = tokenize(input);
 
 // Imprime a tabela
 console.table(tokens);
+
+
+const symbolTable = {};
+
+for (const token of tokens) {
+  if (token.identification === 'identificador') {
+    const name = token.token;
+    // Adicione informações adicionais ao objeto symbolTable
+    symbolTable[name] = {
+      type: 'identificador',
+      scope: 'global',
+      // adicione outras propriedades relevantes aqui
+    };
+  }
+
+  if (token.identification === 'constante') {
+    const name = token.token;
+
+    // Adicione informações adicionais ao objeto symbolTable
+    symbolTable[name] = {
+      type: 'constante',
+      scope: 'global',
+      // adicione outras propriedades relevantes aqui
+    };
+  }
+}
+
+console.table(symbolTable);
+
+
+// Exportar arquivo JSON
+const exportButton = document.getElementById('exportButton');
+exportButton.addEventListener('click', exportTablesToJSON);
+
+function exportTablesToJSON() {
+  const tables = {
+    tokens: tokens,
+    symbolTable: symbolTable
+  };
+
+  const json = JSON.stringify(tables);
+  const blob = new Blob([json], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.download = 'tabelas.json';
+  link.href = url;
+  link.click();
+}
+
+
